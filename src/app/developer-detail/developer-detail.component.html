@@ -1,1 +1,12 @@
-<p>developer-detail works!</p>
+<mat-toolbar  color="primary">
+    {{title}}
+   </mat-toolbar>
+<div *ngIf="developer">
+<img [src]="developer.avatar_url">
+
+        <h3 matLine> {{developer.login}} </h3>
+        <p matLine>
+          <span> Public repos: {{ developer.public_repos}} Followers: {{ developer.followers}} </span>
+        </p>
+    
+    </div>    <button (click)="goBack()">go back</button>
