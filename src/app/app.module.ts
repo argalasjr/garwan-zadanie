@@ -29,16 +29,14 @@ import { DeveloperDetailComponent } from './developer-detail/developer-detail.co
 import { AppRoutingModule } from './app-routing.module';
 import { environment } from 'src/environments/environment';
 import { LoginComponent } from './auth/login/login.component';
-import { RegisterComponent } from './auth/register/register.component';
-import { ResetComponent } from './auth/reset/reset.component';
+
 @NgModule({
   declarations: [
     AppComponent,
     DevelopersComponent,
     DeveloperDetailComponent,
     LoginComponent,
-    RegisterComponent,
-    ResetComponent
+
   ],
   imports: [
     BrowserModule,
