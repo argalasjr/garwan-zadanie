@@ -33,7 +33,8 @@ export class LoginComponent implements OnInit {
     this.afAuth.signInAnonymously().then((result) => {
      
       this.ngZone.run(() => {
-        this.router.navigate(['/developers', { user: result.user}]);
+       
+        this.router.navigate(['/developers']);
         console.log('succes');
        });
  

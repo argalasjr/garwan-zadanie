@@ -1,0 +1,45 @@
+  
+<mat-toolbar color="primary">
+    <p *ngIf="restApi.authGithub" > Github User</p>
+    <p *ngIf="!restApi.authGithub" > Anonymous User</p>
+
+    <button *ngIf="restApi.authGithub" mat-button  routerLink="/detail/profile">User Profile</button>
+    <button mat-button  (click) ="logout()">Logout</button>
+
+  </mat-toolbar>
+
+  <mat-toolbar color="secondary">
+      Sort by:
+     <button mat-button  (click) ="sortByRepos()">Public repos</button>
+     <button mat-button  (click) ="sortByFollowers()">Followers</button>
+     <button mat-button  (click) ="sortByRegistrationDate()">Registration</button>
+ 
+   </mat-toolbar>
+  
+  <cdk-virtual-scroll-viewport #scroller itemSize="72" class="content">
+    <mat-list>
+      <ng-container  *cdkVirtualFor="let developer of developersList" >
+        <mat-list-item routerLink="/detail/{{developer.login}}" >
+          <img matListAvatar [src]="developer.avatar_url">
+          <h3 matLine> {{developer.login}} </h3>
+          <p matLine>   
+                <span> Public repos: {{ developer.public_repos}} </span>
+          </p>
+          <p matLine>   
+            <span> Followers: {{ developer.followers}} </span>
+      </p>
+      <p matLine>   
+        <span> Registration Date: {{developer.created_at}} </span>
+  </p>
+
+          <mat-divider></mat-divider>
+        </mat-list-item>
+      </ng-container>
+      <div class="spinner-item">
+        <mat-progress-spinner [mode]="'indeterminate'" [diameter]="50"></mat-progress-spinner>
+      </div>
+    </mat-list>
+  </cdk-virtual-scroll-viewport>
+
+  
+  
