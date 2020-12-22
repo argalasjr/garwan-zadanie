@@ -9,6 +9,8 @@
   </mat-toolbar>
 
   <mat-toolbar color="secondary">
+    <label for="search-box">Get by location:</label><input #searchBox id="search-box" value="Bratislava" (input)="search(searchBox.value)" />
+    <button mat-button  (click) ="triggerSearch()">Find</button>
       Sort by:
      <button mat-button  (click) ="sortByRepos()">Public repos</button>
      <button mat-button  (click) ="sortByFollowers()">Followers</button>

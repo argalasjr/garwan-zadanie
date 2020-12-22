@@ -1,12 +1,25 @@
 <mat-toolbar  color="primary">
     {{title}}
+    <button mat-button  (click)="goBack()">go back</button>
    </mat-toolbar>
 <div *ngIf="developer">
 <img [src]="developer.avatar_url">
+
 
         <h3 matLine> {{developer.login}} </h3>
         <p matLine>
           <span> Public repos: {{ developer.public_repos}} Followers: {{ developer.followers}} </span>
         </p>
-    
-    </div>    <button (click)="goBack()">go back</button>
+        <div *ngIf="restApi.authGithub">
+        <h3 matLine> User issues </h3>
+          <mat-list>
+            <ng-container  *ngFor="let issue of issuesList" >
+              <mat-list-item >
+                <h3 matLine> <a  target="_blank" href="{{issue.html_url}}">{{issue.title}}</a>  </h3>
+            
+                <mat-divider></mat-divider>
+              </mat-list-item>
+            </ng-container>
+          </mat-list>
+        </div>
+    </div>    

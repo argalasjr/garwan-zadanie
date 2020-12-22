@@ -1,12 +1,13 @@
 import { Component, OnInit, ChangeDetectionStrategy, ViewChild, AfterViewInit, NgZone, ChangeDetectorRef } from '@angular/core';
 import { CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
 import { map, pairwise, filter, throttleTime } from 'rxjs/operators';
-import { timer } from 'rxjs';
+import { from, timer } from 'rxjs';
 import { RestApiService} from '../network/rest-api.service';
 import { Router, ActivatedRoute, ParamMap } from '@angular/router';
 import { AngularFireAuth } from '@angular/fire/auth';
-import { Observable, of } from 'rxjs';
 import { Sort} from '../util/sort'
+
+
 @Component({
   selector: 'app-developers',
   templateUrl: './developers.component.html',
@@ -16,13 +17,14 @@ export class DevelopersComponent implements OnInit, AfterViewInit {
 
   @ViewChild('scroller') scroller: CdkVirtualScrollViewport;
 
+  currentLocation = 'Bratislava'
   currentSort = 'public_repos'
   currentOrder = 'desc'
   currentType = ''
   developersList = [];
   sortUtil = null;
   loading = false;
-  fromId :Number = 1
+  minSortValue:String = '0'
   constructor(
     private ngZone: NgZone,
     public restApi: RestApiService,
@@ -38,7 +40,9 @@ export class DevelopersComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     const loggedInUser = this.route.snapshot.params;
     console.log(loggedInUser);
-    this.fetchMore();
+    this.fetchMore(this.currentLocation)
+  
+   
   }
 
   ngAfterViewInit(): void {
@@ -46,44 +50,84 @@ export class DevelopersComponent implements OnInit, AfterViewInit {
     this.updateList();
   }
 
-  fetchMore(): void {
-    this.restApi.getDevelopers(this.fromId).subscribe(data => { 
-      console.log(data)
+  search(term: string): void {
+
+
+    this.currentLocation = term;
+
+   
+  }
+
+  triggerSearch(){
+    this.minSortValue = '0'
+    this.developersList.splice(0,this.developersList.length)
+    this.fetchMore(this.currentLocation);
+  }
+
+
+ async fetchMore(location): Promise<void> {
+   console.log(location)
     
+    this.restApi.getDevelopers(this.minSortValue,location,this.currentSort,this.minSortValue).subscribe(async data => { 
+      console.log(data)
+      if(data){
       const newItems = [];
-      for (let i = 0; i < data.length; i++) {
+      for (let i = 0; i < data.items.length; i++) {
 
         // nenasiel som v dokumentacii lepsi sposob ako ziskat detaily kazdeho usera iba urobit pre kazdeho novy request
-        this.restApi.getDeveloperDetail(data[i].login).subscribe(
+
+       this.restApi.getDeveloperDetail(data.items[i].login).subscribe(
           userDetail => {
+            console.log(userDetail)
+            if(userDetail){
             newItems.push({
-              login: data[i].login,         
-              avatar_url: data[i].avatar_url,    
+              login:  userDetail.login,         
+              avatar_url: userDetail.avatar_url,    
               followers: userDetail.followers,
               public_repos: userDetail.public_repos,
               created_at: userDetail.created_at
             });
-
-          }
+      
+          } 
+        }
+      
         )
+ 
+
+
       
       }
-      if(data[data.length -1]){
-      this.fromId = data[data.length -1].id;
-      console.log(this.fromId)
-      }
+
    
       this.loading = true;
       timer(1000).subscribe(() => {
         this.loading = false;
         this.developersList = [...this.developersList, ...newItems];
         this.developersList.sort(this.sortUtil.startSort(this.currentSort,this.currentOrder,this.currentType))
+        if(this.developersList[this.developersList.length -1]){
+          if(this.currentSort === 'public_repos'){
+            this.minSortValue = String(this.developersList[this.developersList.length -1].public_repos);
+          }
+          if(this.currentSort === 'followers'){
+            this.minSortValue = String(this.developersList[this.developersList.length -1].followers);
+          }
+          if(this.currentSort === 'created_at'){
+            this.minSortValue = this.developersList[this.developersList.length -1].created_at;
+          }
+  
+        console.log(this.minSortValue)
+        }
         this.cd.detectChanges();
 
 
       });
   
     
+    } else {
+
+        this.logout();
+    }
+      
     });
  
    
@@ -96,18 +140,19 @@ export class DevelopersComponent implements OnInit, AfterViewInit {
       throttleTime(200)
     ).subscribe(() => {
       this.ngZone.run(() => {
-        this.fetchMore();
+     
+          this.fetchMore(this.currentLocation);
       });
     }
     );
   }
 
   sortByRepos(){
-
     this.currentSort = 'public_repos'
     this.currentOrder = 'desc'
     this.currentType = ''
     this.developersList = [...this.developersList.sort(this.sortUtil.startSort(this.currentSort,this.currentOrder,this.currentType))]
+    this.minSortValue = String(this.developersList[this.developersList.length -1].public_repos);
     this.cd.detectChanges()
    
   }
@@ -116,7 +161,7 @@ export class DevelopersComponent implements OnInit, AfterViewInit {
    this.currentOrder = 'desc'
    this.currentType = ''
    this.developersList = [...this.developersList.sort(this.sortUtil.startSort(this.currentSort,this.currentOrder,this.currentType))]
-
+   this.minSortValue = String(this.developersList[this.developersList.length -1].followers);
   this.cd.detectChanges();
  }
   sortByRegistrationDate(){
@@ -124,6 +169,7 @@ export class DevelopersComponent implements OnInit, AfterViewInit {
     this.currentOrder = 'desc'
     this.currentType = 'date'
     this.developersList = [...this.developersList.sort(this.sortUtil.startSort(this.currentSort,this.currentOrder,this.currentType))]
+    this.minSortValue = String(this.developersList[this.developersList.length -1].created_at);
     this.cd.detectChanges();
   }
 
@@ -133,7 +179,7 @@ export class DevelopersComponent implements OnInit, AfterViewInit {
     this.afAuth.signOut().then((success)=>{
       this.ngZone.run(() => {
         if(this.restApi.authGithub){
-          this.restApi.authGithub = false;
+          this.restApi.removeToken();
         }
         this.router.navigate(['/login']);
         console.log('succes');

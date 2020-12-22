@@ -3,7 +3,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
-import { Developer } from '../model/developer';
+import { Developer, Developers } from '../model/developer';
+import { Issue } from '../model/issue';
 
 
 @Injectable({
@@ -20,6 +21,7 @@ export class RestApiService {
   };
 
   public authGithub = false;
+  
 
   constructor(
     private http: HttpClient,
@@ -37,14 +39,33 @@ export class RestApiService {
     console.log(this.httpOptions.headers)
   }
 
+  removeToken(){
+    this.httpOptions =  {  headers: new HttpHeaders({
+      'Content-Type': 'application/vnd.github.v3+json'})
+    };
+    this.authGithub = false;
+  }
 
-  getDevelopers(fromId): Observable<Developer[]> {
 
-    const url = `${this.BASE_URL}/users?since=${fromId}`;
-    return this.http.get<Developer[]>(url,this.httpOptions)
+  getDevelopers(fromId,location,currentSort,minSortvalue): Observable<Developers> {
+    if (!location.trim()) {
+      // if not search term, return empty hero array.
+      location = 'Bratislava'
+    }
+    if (currentSort == 'public_repos'){
+      currentSort = 'repos'
+    }
+    let queryString = 'q=' + encodeURIComponent(`location:${location} ${currentSort}:<${minSortvalue}`);
+    if(minSortvalue === '0'){
+      queryString = 'q=' + encodeURIComponent(`location:${location}`)
+    }
+    
+    const url = `${this.BASE_URL}/search/users?${queryString}`;
+    console.log(url)
+    return this.http.get<Developers>(url,this.httpOptions)
       .pipe(
         tap(_ => console.log('fetched developers')),
-        catchError(this.handleError<Developer[]>('getDevelopers', []))
+        catchError(this.handleError<Developers>('getDevelopers', null))
       );
   }
 
@@ -59,9 +80,20 @@ export class RestApiService {
       );
   }
 
+  getUserIssues(login): Observable<Issue> {
+    console.log(this.httpOptions.headers)
+    const queryString = 'q=' + encodeURIComponent(`user:${login}`);
+    const url = `${this.BASE_URL}/search/issues?${queryString}`;
+    return this.http.get<Issue>(url,this.httpOptions)
+      .pipe(
+        tap(_ => console.log('fetched user issues')),
+        catchError(this.handleError<Issue>('getUserIssues', null))
+      );
+  }
+
 
   getDeveloperDetail(id): Observable<Developer> {
-
+    console.log(this.httpOptions.headers)
     const url = `${this.BASE_URL}/users/${id}`;
     return this.http.get<Developer>(url,this.httpOptions)
       .pipe(
@@ -69,6 +101,8 @@ export class RestApiService {
         catchError(this.handleError<Developer>('getDeveloperDetail', null))
       );
   }
+
+
 
 
   
@@ -82,7 +116,7 @@ export class RestApiService {
     return (error: any): Observable<T> => {
 
       // TODO: send the error to remote logging infrastructure
-      console.error(error); // log to console instead
+      console.log(error.message); // log to console instead
 
       // Let the app keep running by returning an empty result.
       return of(result as T);

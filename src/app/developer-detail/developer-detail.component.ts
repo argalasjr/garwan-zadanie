@@ -11,9 +11,10 @@ import { Developer } from '../model/developer';
 export class DeveloperDetailComponent implements OnInit {
 
   public title;
+  public issuesList = []
   constructor(
     private route: ActivatedRoute,
-    private restApi: RestApiService,
+    public restApi: RestApiService,
     private location: Location
   ) { }
 
@@ -25,19 +26,37 @@ export class DeveloperDetailComponent implements OnInit {
     if(id === 'profile'){
       this.title = 'User Profile'
       this.restApi.getProfile()
-      .subscribe(dev => {this.developer = dev; console.log(dev)});
+      .subscribe(dev => {
+        if(dev){
+        this.developer = dev; 
+        console.log(dev)
+        this.restApi.getUserIssues(dev.login)
+        .subscribe(data => {
+          console.log(data.items)
+          this.issuesList = data.items
+        });
+      }
+      });
+
+
      
     } else {
       this.title= 'Developer Detail'
       console.log(id)
       this.restApi.getDeveloperDetail(id)
         .subscribe(dev => {this.developer = dev; console.log(dev)});
+        
+
     }
   }
 
   goBack(): void {
     this.location.back();
   }
+
+  goToLink(url: string){
+    window.open(url, "_blank");
+}
 
 
 }
