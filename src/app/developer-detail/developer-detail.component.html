@@ -10,7 +10,7 @@
         <p matLine>
           <span> Public repos: {{ developer.public_repos}} Followers: {{ developer.followers}} </span>
         </p>
-        <div *ngIf="restApi.authGithub">
+        <div *ngIf="title == 'User Profile'">
         <h3 matLine> User issues </h3>
           <mat-list>
             <ng-container  *ngFor="let issue of issuesList" >

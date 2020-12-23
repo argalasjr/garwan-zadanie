@@ -24,7 +24,7 @@ export class DevelopersComponent implements OnInit, AfterViewInit {
   developersList = [];
   sortUtil = null;
   loading = false;
-  minSortValue:String = '0'
+  page = 0;
   constructor(
     private ngZone: NgZone,
     public restApi: RestApiService,
@@ -59,7 +59,7 @@ export class DevelopersComponent implements OnInit, AfterViewInit {
   }
 
   triggerSearch(){
-    this.minSortValue = '0'
+    this.page = 0;
     this.developersList.splice(0,this.developersList.length)
     this.fetchMore(this.currentLocation);
   }
@@ -67,8 +67,8 @@ export class DevelopersComponent implements OnInit, AfterViewInit {
 
  async fetchMore(location): Promise<void> {
    console.log(location)
-    
-    this.restApi.getDevelopers(this.minSortValue,location,this.currentSort,this.minSortValue).subscribe(async data => { 
+    this.page = this.page + 1;
+    this.restApi.getDevelopers(this.page,location).subscribe(async data => { 
       console.log(data)
       if(data){
       const newItems = [];
@@ -104,19 +104,6 @@ export class DevelopersComponent implements OnInit, AfterViewInit {
         this.loading = false;
         this.developersList = [...this.developersList, ...newItems];
         this.developersList.sort(this.sortUtil.startSort(this.currentSort,this.currentOrder,this.currentType))
-        if(this.developersList[this.developersList.length -1]){
-          if(this.currentSort === 'public_repos'){
-            this.minSortValue = String(this.developersList[this.developersList.length -1].public_repos);
-          }
-          if(this.currentSort === 'followers'){
-            this.minSortValue = String(this.developersList[this.developersList.length -1].followers);
-          }
-          if(this.currentSort === 'created_at'){
-            this.minSortValue = this.developersList[this.developersList.length -1].created_at;
-          }
-  
-        console.log(this.minSortValue)
-        }
         this.cd.detectChanges();
 
 
@@ -148,11 +135,11 @@ export class DevelopersComponent implements OnInit, AfterViewInit {
   }
 
   sortByRepos(){
+
     this.currentSort = 'public_repos'
     this.currentOrder = 'desc'
     this.currentType = ''
     this.developersList = [...this.developersList.sort(this.sortUtil.startSort(this.currentSort,this.currentOrder,this.currentType))]
-    this.minSortValue = String(this.developersList[this.developersList.length -1].public_repos);
     this.cd.detectChanges()
    
   }
@@ -161,7 +148,6 @@ export class DevelopersComponent implements OnInit, AfterViewInit {
    this.currentOrder = 'desc'
    this.currentType = ''
    this.developersList = [...this.developersList.sort(this.sortUtil.startSort(this.currentSort,this.currentOrder,this.currentType))]
-   this.minSortValue = String(this.developersList[this.developersList.length -1].followers);
   this.cd.detectChanges();
  }
   sortByRegistrationDate(){
@@ -169,7 +155,6 @@ export class DevelopersComponent implements OnInit, AfterViewInit {
     this.currentOrder = 'desc'
     this.currentType = 'date'
     this.developersList = [...this.developersList.sort(this.sortUtil.startSort(this.currentSort,this.currentOrder,this.currentType))]
-    this.minSortValue = String(this.developersList[this.developersList.length -1].created_at);
     this.cd.detectChanges();
   }
 

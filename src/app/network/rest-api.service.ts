@@ -47,20 +47,14 @@ export class RestApiService {
   }
 
 
-  getDevelopers(fromId,location,currentSort,minSortvalue): Observable<Developers> {
+  getDevelopers(page,location): Observable<Developers> {
     if (!location.trim()) {
       // if not search term, return empty hero array.
       location = 'Bratislava'
     }
-    if (currentSort == 'public_repos'){
-      currentSort = 'repos'
-    }
-    let queryString = 'q=' + encodeURIComponent(`location:${location} ${currentSort}:<${minSortvalue}`);
-    if(minSortvalue === '0'){
-      queryString = 'q=' + encodeURIComponent(`location:${location}`)
-    }
-    
-    const url = `${this.BASE_URL}/search/users?${queryString}`;
+    const queryString = 'q=' + encodeURIComponent(`location:${location}`);
+
+    const url = `${this.BASE_URL}/search/users?${queryString}&page=${String(page)}`;
     console.log(url)
     return this.http.get<Developers>(url,this.httpOptions)
       .pipe(
